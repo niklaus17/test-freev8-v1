@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { z } from "zod";
-import { CheckCircle2, X } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useSignup } from "./SignupContext";
 
@@ -45,17 +45,9 @@ export function SignupModal() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        showCloseButton={false}
         className="max-w-md gap-0 rounded-2xl border-0 bg-background p-0 shadow-2xl"
       >
-        <button
-          type="button"
-          onClick={() => handleOpenChange(false)}
-          aria-label="Închide"
-          className="absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full text-foreground/60 transition hover:bg-muted hover:text-foreground"
-        >
-          <X className="h-5 w-5" />
-        </button>
+
 
         {submitted ? (
           <div className="px-6 py-10 text-center sm:px-10">
