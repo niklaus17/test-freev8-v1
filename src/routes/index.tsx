@@ -12,6 +12,7 @@ import { Footer } from "@/components/webcase/Footer";
 import { SignupProvider } from "@/components/webcase/SignupContext";
 import { SignupModal } from "@/components/webcase/SignupModal";
 import { StickyCta } from "@/components/webcase/StickyCta";
+import { LiveActivity } from "@/components/webcase/LiveActivity";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -79,6 +80,7 @@ function Index() {
         <Footer />
       </main>
       <SignupModal />
+      <LiveActivity />
       <StickyCta />
     </SignupProvider>
   );

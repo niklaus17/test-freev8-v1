@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useSignup } from "./SignupContext";
 
 export function StickyCta() {
-  const { openModal, open } = useSignup();
+  const { openModal, open, dates } = useSignup();
+
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -35,7 +36,12 @@ export function StickyCta() {
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-foreground/70 opacity-75" />
         <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary-foreground" />
       </span>
-      Începe gratuit →
+      <span className="flex flex-col items-start leading-tight">
+        <span>Începe gratuit →</span>
+        <span className="text-[11px] font-medium text-primary-foreground/85">
+          Sesiunea {dates.rangeShort}
+        </span>
+      </span>
     </button>
   );
 }
