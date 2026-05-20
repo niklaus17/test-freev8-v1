@@ -80,6 +80,7 @@ function Index() {
         <Footer />
       </main>
       <SignupModal />
+      <LiveActivity />
       <StickyCta />
     </SignupProvider>
   );
