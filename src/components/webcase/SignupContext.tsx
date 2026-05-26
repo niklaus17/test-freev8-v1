@@ -89,6 +89,10 @@ export function SignupProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    console.log("[SignupContext] open", open);
+  }, [open]);
+
   const value = useMemo<SignupContextValue>(
     () => ({
       open,
