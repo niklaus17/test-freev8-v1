@@ -14,22 +14,29 @@ export function SignupModal() {
     const container = containerRef.current;
     if (!container) return;
 
-    // Clear any previous render of the widget before re-injecting
     container.innerHTML = "";
 
+    // The widget script looks up its <script> tag by id, then inserts an iframe
+    // before it and removes the script node. It auto-runs on DOMContentLoaded;
+    // since that has already fired by the time the modal opens, we trigger it
+    // manually after the script loads.
     const script = document.createElement("script");
     script.id = WIDGET_ID;
     script.src = WIDGET_SRC;
     script.async = true;
+    script.onload = () => {
+      const w = window as unknown as Record<string, unknown>;
+      const fn = w[`startWidget${WIDGET_ID}`];
+      if (typeof fn === "function") {
+        try { (fn as () => void)(); } catch { /* ignore */ }
+      } else {
+        document.dispatchEvent(new Event(`StartWidget${WIDGET_ID}`));
+      }
+    };
     container.appendChild(script);
 
     return () => {
-      // Remove any global script tag the widget may have appended to <head>/<body>
-      document.querySelectorAll(`script[src="${WIDGET_SRC}"]`).forEach((s) => s.remove());
-      const stray = document.getElementById(WIDGET_ID);
-      if (stray && stray.parentElement && stray.parentElement !== container) {
-        stray.remove();
-      }
+      container.innerHTML = "";
     };
   }, [open]);
 
