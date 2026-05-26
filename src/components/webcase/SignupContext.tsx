@@ -62,11 +62,15 @@ export function SignupProvider({ children }: { children: ReactNode }) {
   const openModal = useCallback(() => setOpen(true), []);
 
   const dates = useMemo(() => getCourseDates(), []);
-  const [enrolledToday, setEnrolledToday] = useState<number>(() => initialEnrolledToday());
+  // Always start with a fixed value on both SSR and first client render to avoid hydration mismatch.
+  const [enrolledToday, setEnrolledToday] = useState<number>(6);
   const [activity, setActivity] = useState<Activity>(null);
   const idRef = useRef(0);
 
   useEffect(() => {
+    // Hydrate the realistic starting count after mount (client-only).
+    setEnrolledToday(initialEnrolledToday());
+
     let timer: ReturnType<typeof setTimeout>;
 
     function schedule(initialDelay?: number) {
