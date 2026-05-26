@@ -4,6 +4,45 @@ import { useSignup } from "./SignupContext";
 
 const WIDGET_ID = "b0b5cfd57427caebedb92a796623df66ec3d589e";
 const WIDGET_SRC = "https://community.webcase.md/pl/lite/widget/script?id=1609357";
+const JQUERY_SRC = "https://code.jquery.com/jquery-3.7.1.min.js";
+
+function loadScript(src: string, id?: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (id) {
+      const existing = document.getElementById(id) as HTMLScriptElement | null;
+      if (existing) {
+        if (existing.dataset.loaded === "true") return resolve();
+        existing.addEventListener("load", () => resolve());
+        existing.addEventListener("error", () => reject(new Error(`Failed to load ${src}`)));
+        return;
+      }
+    } else {
+      const existing = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement | null;
+      if (existing && existing.dataset.loaded === "true") return resolve();
+    }
+
+    const script = document.createElement("script");
+    script.src = src;
+    if (id) script.id = id;
+    script.async = false;
+    script.onload = () => {
+      script.dataset.loaded = "true";
+      resolve();
+    };
+    script.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
+function ensureJQuery(): Promise<void> {
+  const w = window as unknown as { jQuery?: unknown; $?: unknown };
+  if (w.jQuery) return Promise.resolve();
+  return loadScript(JQUERY_SRC, "jquery-cdn").then(() => {
+    if (!(window as unknown as { jQuery?: unknown }).jQuery) {
+      throw new Error("jQuery failed to initialize");
+    }
+  });
+}
 
 export function SignupModal() {
   const { open, setOpen } = useSignup();
@@ -14,29 +53,40 @@ export function SignupModal() {
     const container = containerRef.current;
     if (!container) return;
 
+    let cancelled = false;
     container.innerHTML = "";
 
-    // The widget script looks up its <script> tag by id, then inserts an iframe
-    // before it and removes the script node. It auto-runs on DOMContentLoaded;
-    // since that has already fired by the time the modal opens, we trigger it
-    // manually after the script loads.
-    const script = document.createElement("script");
-    script.id = WIDGET_ID;
-    script.src = WIDGET_SRC;
-    script.async = true;
-    script.onload = () => {
-      const w = window as unknown as Record<string, unknown>;
-      const fn = w[`startWidget${WIDGET_ID}`];
-      if (typeof fn === "function") {
-        try { (fn as () => void)(); } catch { /* ignore */ }
-      } else {
-        document.dispatchEvent(new Event(`StartWidget${WIDGET_ID}`));
-      }
-    };
-    container.appendChild(script);
+    // Anchor where the widget will insert its iframe (it inserts before its own <script> tag).
+    const anchor = document.createElement("script");
+    anchor.id = WIDGET_ID;
+    anchor.type = "text/placeholder";
+    container.appendChild(anchor);
+
+    ensureJQuery()
+      .then(() => {
+        if (cancelled) return;
+        // Append the widget loader script directly into the container.
+        const widgetScript = document.createElement("script");
+        widgetScript.src = WIDGET_SRC;
+        widgetScript.async = true;
+        widgetScript.onload = () => {
+          const w = window as unknown as Record<string, unknown>;
+          const fn = w[`startWidget${WIDGET_ID}`];
+          if (typeof fn === "function") {
+            try { (fn as () => void)(); } catch { /* noop */ }
+          } else {
+            document.dispatchEvent(new Event(`StartWidget${WIDGET_ID}`));
+          }
+        };
+        container.appendChild(widgetScript);
+      })
+      .catch((err) => {
+        console.error("[SignupModal] widget load failed", err);
+      });
 
     return () => {
-      container.innerHTML = "";
+      cancelled = true;
+      if (container) container.innerHTML = "";
     };
   }, [open]);
 
