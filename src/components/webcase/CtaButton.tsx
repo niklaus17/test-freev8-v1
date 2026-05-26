@@ -21,6 +21,7 @@ export function CtaButton({ size = "lg", className, children, onClick, ...props 
     <button
       type="button"
       onClick={(e) => {
+        console.log("[CtaButton] click");
         onClick?.(e);
         openModal();
       }}
